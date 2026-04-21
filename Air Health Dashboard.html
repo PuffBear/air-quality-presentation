@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Air Quality & Public Health · India · DSM Final Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="data.js"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="pages1.jsx"></script>
+  <script type="text/babel" src="pages2.jsx"></script>
+  <script type="text/babel" src="pages3.jsx"></script>
+  <script type="text/babel" src="pages4.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const PAGES = [
+      { id: "overview",    label: "Overview",          section: "Context",   Component: () => <OverviewPage/> },
+      { id: "pollution",   label: "Pollution hotspots", section: "Findings",  Component: () => <PollutionPage/> },
+      { id: "correlation", label: "Pollution ↔ Health", section: "Findings",  Component: () => <CorrelationPage/> },
+      { id: "seasonality", label: "Temporal patterns",  section: "Findings",  Component: () => <SeasonalityPage/> },
+      { id: "clusters",    label: "Risk clusters",      section: "Findings",  Component: () => <ClusterPage/> },
+      { id: "predictor",   label: "Health predictor",   section: "Tools",     Component: () => <PredictorPage/> },
+      { id: "recs",        label: "Policy playbook",    section: "Outputs",   Component: () => <RecsPage/> },
+    ];
+
+    const SECTIONS = ["Context","Findings","Tools","Outputs"];
+
+    function App() {
+      const [page, setPage] = useState(() => localStorage.getItem("dsm_page") || "overview");
+      useEffect(() => { localStorage.setItem("dsm_page", page); window.scrollTo(0,0); }, [page]);
+
+      const current = PAGES.find(p => p.id === page) || PAGES[0];
+      const D = window.APP_DATA;
+
+      return (
+        <div className="app" data-screen-label={`${current.label}`}>
+          <aside className="sidebar">
+            <div className="brand">
+              <div className="brand-mark">ॐ</div>
+              <div>
+                <div className="brand-title">Air & Health India</div>
+                <div className="brand-sub">DSM Final · 2026</div>
+              </div>
+            </div>
+            <nav className="nav">
+              {SECTIONS.map(sec => (
+                <React.Fragment key={sec}>
+                  <div className="nav-section">{sec}</div>
+                  {PAGES.filter(p => p.section === sec).map((p, i) => {
+                    const idx = PAGES.indexOf(p) + 1;
+                    return (
+                      <div
+                        key={p.id}
+                        className={`nav-item ${page === p.id ? "active" : ""}`}
+                        onClick={() => setPage(p.id)}
+                      >
+                        <span className="nav-num">{String(idx).padStart(2,"0")}</span>
+                        {p.label}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </nav>
+            <div className="sidebar-footer">
+              {D.meta.aqRecords.toLocaleString()} daily AQ records<br/>
+              {D.meta.healthRecords.toLocaleString()} monthly health records<br/>
+              {D.meta.districts} districts · {D.meta.states} states
+            </div>
+          </aside>
+
+          <main className="main">
+            <div className="topbar">
+              <div className="breadcrumb">
+                {current.section} &nbsp;/&nbsp; <b>{current.label}</b>
+              </div>
+              <div className="topbar-meta">
+                <span><span className="dot"/>Dataset synced {D.meta.updated}</span>
+                <span>{D.meta.period}</span>
+              </div>
+            </div>
+            <current.Component/>
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
